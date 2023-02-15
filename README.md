@@ -89,6 +89,8 @@
 
 ### 앱 라우터 구성하기
 
+-
+
 ### 스크린과 중첩 라우팅
 
 - 최근 화살표함수보다 일반 선언함수로 많이 작성한다.
@@ -98,19 +100,29 @@
 - 모든 페이지가 쌓여있으면 메모리가 많이 차지하기 때문에 때론 스택을 일부로 비우는 경우도 있다.
 
 ### 로그인 화면 만들기
+
 - 조건문을 사용했을 떄 children이 반드시 하나여야한다 라는 에어문구가 나올 경우 Tab.group을 사용한다. || 특정 스크린들 간에 공통 속성이 있을 때도 사용. - 찾아볼 것.
 - style을 인라인으로 여러개를 넣을 때 배열로 하는 방법이 있고, StyleSheet.compose(styles.loign, styles.logout) 이렇게 작성하여도 된다.
 - 변수명은 딱봐도 알 수 있도록 네임을 써야하고, 코드가 깔끔하다는건 무조건적인 줄임이 아니라, 이해가 잘 되도록 작성하는것이 깔끔한 것이다.
 - StyleSheet.hairlineSheet
 
 ### TextInput 사용하기
-- importantForAutofill
+
+- importantForAutofill - 안드로이드만 가능하다.
 - autoComplete
 - 키보드 next를 눌렀을 떄 다음 버튼으로 이동하기.
 - blurOnSubmit : 이메일을 입력하고 다음을 누르면 키보드가 사라지고, 다시 패스워드에 포커스가 되면 키보드가 올라가는데 사용자 입장에서는 굳이? 따라서 해당 메서드는 키보드를 아래로 내려가는 것을 방지한다.
+
 ```
  onSubmitEditing = {() => { passwordRef.current?.focus();}} // 엔터 쳤을 때 할 행동
 ```
+
+```
+ keyboardType={Platform.OS === 'android' ? 'default' : 'ascii-capable'}
+```
+
+에서 ascii-capable : 영문만 표시되는 키보드
+
 - clearButtonMode : x 표시가 나타나며 해당 아이콘을 클릭할 경우 작성한 글자는 사라짐 - ios만 가능
 - input 검증을 할 경우 띄어쓰기를 조심하자. 띄어쓰기 또한 글자이다.
 
@@ -118,13 +130,82 @@
 
 - DissmissKeyboardView.tsx 파일 잘 보기.
 - TouchableWidthoutFeedback 에서 accessible={false} 속성이 있다. 이는 시각적으로 불편한 사람을 위한 속성인데, 스크린리더는 해당 태그를 버튼으로 인식한다. 하지만 이 태그는 의미없는 태그이기 때문에
-  오히려 시각 장애인에게 혼란을 줄 수 있다. 
+  오히려 시각 장애인에게 혼란을 줄 수 있다.
 
 ### keyboard-aware-scrollView의 커스텀 타이핑
-- keyboard-aware-scrollView 라이브러리를 이용해보자. 
+
+- keyboard-aware-scrollView 라이브러리를 이용해보자.
   - 근데 이건 사용할 필요가 없는데, 해당 화면을 스크롤 뷰로 하면 되자나.
+
 ```
 const DissmissView : React.FC<props 타입 자리> = ({children}) => (<View>{children}</View>) // 이렇게 화살표 함수를 사용할 경우 children props 타입을 지정해줘야 할때 React.FC 타입을 작성해준다.
 ```
-- 옛날 라이브러리들은 타입스트립트가 없는 경우가 있다. 이럴 경우 타입에러가 발생한다. -> 타입스크립트에서 해당 라이브러리 타입이 있는지 확인해야한다.  
-- 그래도 없을 경우 types 폴더 내에 내가 작성해야 한다. -> 현재 강의에서는 import keyboardAwareScrollView 를 하고  해당 타입이 어떻게 되어있는지 응용하여 작성된 것이다.
+
+- 옛날 라이브러리들은 타입스트립트가 없는 경우가 있다. 이럴 경우 타입에러가 발생한다. -> 타입스크립트에서 해당 라이브러리 타입이 있는지 확인해야한다.
+- 그래도 없을 경우 types 폴더 내에 내가 작성해야 한다. -> 현재 강의에서는 import keyboardAwareScrollView 를 하고 해당 타입이 어떻게 되어있는지 응용하여 작성된 것이다.
+
+### 리덕스 연결하기
+
+- 리덕스 툴킷 설치
+- store - index.ts 파일내에 미들웨어는 flipper과 연결하기 위해 코드 작성된 것
+- useSelector 는 provider 내에서만 사용 가능하다. -> App inner 컴포넌트로 분리한다.
+
+### axios로 서버에 요청보내기
+
+- 서버요청은 axios 사용하지만 최근 ky와 got 으로 넘어가는 추세. axios 보다 가벼움. 하지만 react-native는 안정적이 않고 레퍼런스가 적어서 아직은 잘 사용하지 않음.
+- try catch finally문
+- useEffect 콜백함수에 async를 사용할 수 없다. useEffect의 리던 값은 return () => {} 이라는 클리어 함수 이기 때문이다.
+
+### 로딩창 만들기
+
+- 서버에 요청을 보낼때 사용자가 파악할 수 있도록 로딩창을 만들어 준다.
+- await인 경우 데이터가 받오는 동안 대기를 한다.
+- axios를 사용할 때 error 타입에 에러가 발생할 것이다. error = unknown(어떤 에러가 나든 catch에서 다 걸러버리기 때문에 타입스크립트는 에러를 파악할 수 있다.)
+  - 따라서 axios 에러를 단언시켜 준다.
+
+```
+catch(error){
+  console.error((error as AxiosError).response);
+  if((error as AxiosError).response){
+    ....
+  }
+}
+```
+
+- 위 코드와 같이 타입 단언은 계속 해주어야 한다. -> 지저분하다 -> 변수로 지정해서 사용하도록 한다.
+
+```
+disabled = {!canGoNext || loading}
+```
+
+- 로딩 중 일때 유저가 회원가입 버튼을 누르지 못하게 하도록 한다. (사용자가 계속 누를 수도 있음.)
+- ActivityIndicator
+- axios의 헤더는 요청에 대한 부가 정보라고 생각하자.
+
+### react-native-config
+
+- 서버를 사용할 때 개발시/ 배포시 경우에 따라 주소를 분기처리해야한다.
+- 방법1.
+
+```
+-- 일반적?인 경우
+const response = await axios.post(
+  url:`${process.env.NODE_ENV === 'production' ? '실서버주소' : 'localhost: 3105'}/user`, {data:{...}}
+)
+
+-- react-native 인경우
+url:`${!__DEV__? '실서버주소' : 'localhost: 3105'}/user`, {data:{...}}
+```
+
+- 개발 모드일 경우 `__DEV__` 는 true
+- .env 환경이 변경될 경우 리로드를 해야한다.
+- 라이브러리 react-native-config
+- try catch는 자바스크립트에서 왠만하면 사용하지 않는것이 좋다. async await를 사용할 때 사용하면 된다.
+- 서버에서 비밀번호의 경우 일방향 암호화가 된다. (hash화) 서버개발자도 암호를 알지 못한다.
+  - 만약 값을 다시 얻어야 하는 경우 양방향 암호화를 사용한다. 예) 주민등록번호 등
+
+### react-native-config 문제해결하기
+
+-
+
+### Redux, Config, EncryptedStorage, AsyncStorage의 차이
