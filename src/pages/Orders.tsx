@@ -4,7 +4,7 @@ import React from 'react';
 const Orders = () => {
   return (
     <View>
-      <Text>Oreders</Text>
+      <Text>주문 목록</Text>
     </View>
   );
 };

@@ -4,7 +4,7 @@ import React from 'react';
 const Ing = () => {
   return (
     <View>
-      <Text>Ing</Text>
+      <Text>주문 지도</Text>
     </View>
   );
 };

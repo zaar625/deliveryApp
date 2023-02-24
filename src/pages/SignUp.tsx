@@ -1,5 +1,6 @@
 import React, {useCallback, useRef, useState} from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Platform,
   Pressable,
@@ -9,12 +10,15 @@ import {
   View,
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../../App';
-import DissmissKeyboardView from '../components/DismissKeyboardView';
+import DismissKeyboardView from '../components/DismissKeyboardView';
+import axios, {AxiosError} from 'axios';
+import Config from 'react-native-config';
+import {RootStackParamList} from '../../AppInner';
 
 type SignUpScreenProps = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
-const SignUp = () => {
+function SignUp({navigation}: SignUpScreenProps) {
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -31,8 +35,10 @@ const SignUp = () => {
   const onChangePassword = useCallback((text: string) => {
     setPassword(text.trim());
   }, []);
-
-  const onSubmit = useCallback(() => {
+  const onSubmit = useCallback(async () => {
+    if (loading) {
+      return;
+    }
     if (!email || !email.trim()) {
       return Alert.alert('알림', '이메일을 입력해주세요.');
     }
@@ -42,7 +48,6 @@ const SignUp = () => {
     if (!password || !password.trim()) {
       return Alert.alert('알림', '비밀번호를 입력해주세요.');
     }
-
     if (
       !/^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/.test(
         email,
@@ -56,12 +61,31 @@ const SignUp = () => {
         '비밀번호는 영문,숫자,특수문자($@^!%*#?&)를 모두 포함하여 8자 이상 입력해야합니다.',
       );
     }
-    Alert.alert('알림', '회원가입 되었습니다.');
-  }, [email, name, password]);
+    console.log(email, name, password);
+    try {
+      setLoading(true);
+      const response = await axios.post(`${Config.API_URL}/user`, {
+        email,
+        name,
+        password,
+      });
+      console.log(`res : ${response.data}`);
+      Alert.alert('알림', '회원가입 되었습니다.');
+      navigation.navigate('SignIn');
+    } catch (error) {
+      const errorResponse = (error as AxiosError).response;
+      console.error(errorResponse);
+      if (errorResponse) {
+        Alert.alert('알림', errorResponse.data.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, navigation, email, name, password]);
 
   const canGoNext = email && name && password;
   return (
-    <DissmissKeyboardView>
+    <DismissKeyboardView>
       <View style={styles.inputWrapper}>
         <Text style={styles.label}>이메일</Text>
         <TextInput
@@ -118,16 +142,18 @@ const SignUp = () => {
               ? StyleSheet.compose(styles.loginButton, styles.loginButtonActive)
               : styles.loginButton
           }
-          disabled={!canGoNext}
+          disabled={!canGoNext || loading}
           onPress={onSubmit}>
-          <Text style={styles.loginButtonText}>회원가입</Text>
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.loginButtonText}>회원가입</Text>
+          )}
         </Pressable>
       </View>
-    </DissmissKeyboardView>
+    </DismissKeyboardView>
   );
-};
-
-export default SignUp;
+}
 
 const styles = StyleSheet.create({
   textInput: {
@@ -160,3 +186,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+export default SignUp;
